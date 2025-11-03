@@ -33,9 +33,10 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 TESTING = True
 
 if TESTING:
-    S = [26, 27]
+    S = [26, 27, 28, 29, 30]
     n_data = [5000, 10000]
     Tmax = 100
+
     
 
 ## Funciones ##

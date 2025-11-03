@@ -20,17 +20,17 @@ import pandas as pd
 """
 # Parámetros
 
-# TODO Preguntar si es fijado o varía con p 
+# TODO Preguntar si es fijado o varía con p
 S = [26, 27]
 alpha = 0.001
 eta = 0.001
 h = (64, 32)
-Tmax = 600 
+Tmax = 600
 
 n_data = [5000, 10000, 20000, 40000]
 DATA_DIR = "./data"
-MODELS_DIR = "./modelos/paralelo/v1"
-TIEMPOS_DIR = "./tiempos/v1"
+MODELS_DIR = "./modelos/paralelo/v2"
+TIEMPOS_DIR = "./tiempos/v2"
 os.makedirs(TIEMPOS_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 
@@ -59,8 +59,8 @@ def entrenar_modelo_con_semilla(X, y, s, h, eta, alpha, Tmax, verbose = False):
         learning_rate_init=eta,
         alpha=alpha,
         max_iter=Tmax,
-        random_state=s, 
-        verbose=verbose 
+        random_state=s,
+        verbose=verbose
 
     )
 
@@ -77,32 +77,39 @@ def main():
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     p = comm.Get_size()
-    
-    tiempos = [] 
+
+    tiempos = []
     for n in n_data: # Esto for no es paralelizable, solo para automatización experimental
-        print("#"*26, f"Experimentación con N = [{n}]", "#"*26)
-        path_data_n = os.path.join(DATA_DIR, f"{n}")
-        X_path_n = os.path.join(path_data_n, "X.npy")
-        y_path_n = os.path.join(path_data_n, "y.npy")
+        print("#"*26, f"Expermientación con N = [{n}]", "#"*26)
 
         t0 = MPI.Wtime() # T
 
-        # No necesitamos un brodcast de X ni y, cada proceso puede acceder a la data sin problema
-        X = np.load(X_path_n)
-        y = np.load(y_path_n)
+        # Mejora 1: Usamos broadcast para X e Y para evitar el bottleneck de lectura de disco
+        X = None
+        y = None
+
+        if rank == 0:
+            path_data_n = os.path.join(DATA_DIR, f"{n}")
+            X_path_n = os.path.join(path_data_n, "X.npy")
+            y_path_n = os.path.join(path_data_n, "y.npy")
+            X = np.load(X_path_n)
+            y = np.load(y_path_n)
+
+        X = comm.bcast(X, root=0)
+        y = comm.bcast(y, root=0)
 
         # --Repartir S/p--
         S_split = np.array_split(S, p)
         seeds_local = comm.scatter(S_split, root=0)
         print(f"p [{rank}] - ({n}) seeds:", seeds_local)
 
-        
+
         best_acc_local = 0.0
         best_model_local = None
         best_seed_local = None
 
         for s in seeds_local: # Esto si es paralelizable
-            print("*"*12, f"Experimentación con S = [{s}]", "*"*12)
+            print("*"*12, f"Expermientación con S = [{s}]", "*"*12)
             model, acc = entrenar_modelo_con_semilla(X, y, s=s, h=h, eta=eta, alpha=alpha, Tmax=Tmax,verbose = False)
             if acc>best_acc_local:
                 best_acc_local = acc
@@ -113,7 +120,7 @@ def main():
 
         # Envíamos los resulados al master
         results_all = comm.gather(results_local, root=0)
-        
+
         if rank == 0:
             best_acc_global = 0.0
             best_seed_global = None
@@ -127,7 +134,7 @@ def main():
             model_filename = f"MLP_best_N[{n}]_seed_[{best_seed_global}]_acc_[{best_acc_global:.5f}].joblib"
             model_path = os.path.join(MODELS_DIR, model_filename)
             dump(results_all[best_rank][2], model_path)
-        
+
         # Esperamos que todos acaben para recien empezar con el siguiente N
         comm.Barrier()
         t1 = MPI.Wtime() # T
@@ -136,7 +143,7 @@ def main():
             # El tiempo lo mide el master
             tiempo_total = t1 - t0
             print(f"Tiempo total para N={n}: {tiempo_total:.2f} segundos")
-            
+
             tiempos.append((n, tiempo_total))
         comm.Barrier()
 
