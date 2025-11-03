@@ -10,7 +10,7 @@ DATA_DIR = "./data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 if GENERATE_ONE:
-    n_samples = [5000, 10000]
+    n_samples = [20000, 40000]
 else:
     n_samples = [5000, 10000, 20000, 40000]
 

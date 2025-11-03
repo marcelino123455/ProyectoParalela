@@ -8,7 +8,6 @@ from sklearn.preprocessing import StandardScaler
 import os
 import pandas as pd
 
-
 """
  Input:
  S: Array de semillas
@@ -18,14 +17,17 @@ import pandas as pd
  M*: Mejor exactitud
 
 """
+
+
+
 # Parámetros
 
 # TODO Preguntar si es fijado o varía con p 
-S = [26, 27]
+S = np.arange(32)
 alpha = 0.001
 eta = 0.001
 h = (64, 32)
-Tmax = 600 
+Tmax = 100
 
 n_data = [5000, 10000, 20000, 40000]
 DATA_DIR = "./data"

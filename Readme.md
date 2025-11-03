@@ -16,6 +16,12 @@ Por favor ejecute `data.py` para que los datos sean generados ya que están igno
 ```bash
 mpirun -np 4 python proyecto_v1.py
 ```
+# Experimentos
+Set `TESTING=False` in `proyecto_v1.py` and `proyecto_v2.py`, then `GENERATE_ONE = FALSE` in `data.py` to run the experiments.
+```bash
+chmod +x run_experiments.sh
+./run_experiments.sh
+```
 
 
 # Data
@@ -28,6 +34,9 @@ proyecto/
 │   ├── 5000/
 │   └── 10000/
 ```
+# TODO
 
-
-
+- [ ] v3
+- [ ] complexity chart
+- [ ] speedup, efficiency, etc chart
+- [ ] flops
