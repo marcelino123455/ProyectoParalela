@@ -29,7 +29,12 @@ Para una ejecución en modeo de testeo con N = 18 Y p = 9 (Puede ser usado para 
 mpirun --oversubscribe -np  9 ./main --testing
 ```
 
-Si desea ejecutar todos los ejemplos ejecute: 
+Si desea ejecutar todos los ejemplos y verificar la correctitud del ordenamiento:
+!Nota: Recomendable para pruebas N pequeños, debido a que el ordenamiento demora mucho.  
+```bash
+mpirun --oversubscribe -np  4 ./main --check
+```
+Caso contrario y deseable ejecute: 
 ```bash
 mpirun --oversubscribe -np  4 ./main
 ```

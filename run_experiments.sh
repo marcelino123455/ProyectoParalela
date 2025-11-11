@@ -9,13 +9,24 @@ else
   echo "Data already exists."
 fi
 
-processes=(2 4 6 8 16 32)
-versions=(1 2)
+K_VALUES=(2 6 10 14 20)
+processes=()
+for k in "${K_VALUES[@]}"; do
+  processes+=($((k * k)))
+done
+
+versions=(1)
 
 for v in "${versions[@]}"; do
+  echo "Compiling version v${v}..."
+  mpic++ -o "./v${v}/main" "./v${v}/main.cpp"
+  
+  echo "Entering v${v}..."
+  cd "./v${v}" || exit 1
+
   for p in "${processes[@]}"; do
     echo "Running version ${v} with ${p} processes..."
-    mpirun -np "${p}" python "proyecto_v${v}.py"
+    mpirun --oversubscribe -np "${p}" ".//main"
     echo "-----------------------------------------"
   done
 done

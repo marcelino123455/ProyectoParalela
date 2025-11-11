@@ -165,6 +165,7 @@ int main(int argc,char *argv[]){
     MPI_Comm_size(MPI_COMM_WORLD, &p);
 
     bool TESTING = check_flag(argc, argv, "--testing");
+    bool CHECK = check_flag(argc, argv, "--check");
 
     vector<double> tiempos_computo(7, 0.0);
     vector<double> tiempos_comunicacion(7, 0.0);
@@ -298,51 +299,57 @@ int main(int argc,char *argv[]){
         tiempos_computo[5] = 0.0;
 
         // CHECK:
-        master_msg(rank, "CHECK: Verificar orden", TESTING);  
-        vector<int> allData(N, 0);
-        vector<int> allDataIndex(N, 0);
+        if (CHECK){
+            master_msg(rank, "CHECK: Verificar orden", TESTING);  
+            vector<int> allData(N, 0);
+            vector<int> allDataIndex(N, 0);
 
-        double t6comm_start = MPI_Wtime();
-        if (row_rank == col_rank and rank !=0){
-            MPI_Send(M[1].data(), N/raiz_p, MPI_INT, 0, 99, MPI_COMM_WORLD ); 
-            MPI_Send(M[3].data(), N/raiz_p, MPI_INT, 0, 26, MPI_COMM_WORLD ); 
+            double t6comm_start = MPI_Wtime();
+            if (row_rank == col_rank and rank !=0){
+                MPI_Send(M[1].data(), N/raiz_p, MPI_INT, 0, 99, MPI_COMM_WORLD ); 
+                MPI_Send(M[3].data(), N/raiz_p, MPI_INT, 0, 26, MPI_COMM_WORLD ); 
+                
+            }
+            MPI_Status status; 
+            if (rank ==0){
+                copy(M[1].begin(), M[1].end(), allData.begin());
+                copy(M[3].begin(), M[3].end(), allDataIndex.begin());
+                for (int k = 1; k < raiz_p; k++) {
+                    int src = k * (raiz_p + 1);
+                    int offset = k* (N / raiz_p);
+                    MPI_Recv(allData.data()+offset ,N/raiz_p,MPI_INT, src, 99, MPI_COMM_WORLD, &status);
+
+                    MPI_Recv(allDataIndex.data()+offset ,N/raiz_p,MPI_INT, src, 26, MPI_COMM_WORLD, &status);
+                }
+                master_msg(rank, "CHECK - RECV ok", TESTING);  
+
+                if (TESTING){
+                    cout<<"La data es la siguiente: "<<endl; 
+                    for(auto char_val: allData){
+                        cout<<char(char_val)<<", "; 
+                    }
+                    cout<<"Se tiene los siguientes indices: "<<endl; 
+                    for(auto char_val: allDataIndex){
+                        cout<<(char_val)<<", "; 
+                    }
+                }
+                bool is_ordered = checkOrder(allData, allDataIndex); 
+                master_msg(rank, "CHECK - Ordered ok", TESTING);  
+
+                if (is_ordered){
+                    cout<<u8"CHECK: 🦖 :) All oki don worry be happy"<<endl; 
+                } else{
+                    cerr<<u8"CHECK: 😞 :( Terrible lloremos"<<endl; 
+                }
+            }
+            double t6comm_end = MPI_Wtime();
+            tiempos_comunicacion[6] = t6comm_end - t6comm_start;
+            tiempos_computo[6] = 0.0;
+        } else{
+            tiempos_comunicacion[6] = 0.0;
+            tiempos_computo[6] = 0.0;
             
         }
-        MPI_Status status; 
-        if (rank ==0){
-            copy(M[1].begin(), M[1].end(), allData.begin());
-            copy(M[3].begin(), M[3].end(), allDataIndex.begin());
-            for (int k = 1; k < raiz_p; k++) {
-                int src = k * (raiz_p + 1);
-                int offset = k* (N / raiz_p);
-                MPI_Recv(allData.data()+offset ,N/raiz_p,MPI_INT, src, 99, MPI_COMM_WORLD, &status);
-
-                MPI_Recv(allDataIndex.data()+offset ,N/raiz_p,MPI_INT, src, 26, MPI_COMM_WORLD, &status);
-            }
-            master_msg(rank, "CHECK - RECV ok", TESTING);  
-
-            if (TESTING){
-                cout<<"La data es la siguiente: "<<endl; 
-                for(auto char_val: allData){
-                    cout<<char(char_val)<<", "; 
-                }
-                cout<<"Se tiene los siguientes indices: "<<endl; 
-                for(auto char_val: allDataIndex){
-                    cout<<(char_val)<<", "; 
-                }
-            }
-            bool is_ordered = checkOrder(allData, allDataIndex); 
-            master_msg(rank, "CHECK - Ordered ok", TESTING);  
-
-            if (is_ordered){
-                cout<<u8"CHECK: 🦖 :) All oki don worry be happy"<<endl; 
-            } else{
-                cerr<<u8"CHECK: 😞 :( Terrible lloremos"<<endl; 
-            }
-        }
-        double t6comm_end = MPI_Wtime();
-        tiempos_comunicacion[6] = t6comm_end - t6comm_start;
-        tiempos_computo[6] = 0.0;
 
         // Guardados de tiempos
         if (rank == 0) {
