@@ -1,35 +1,65 @@
 import numpy as np
-from sklearn.datasets import make_classification
 import os
+import string
+import argparse
+import math
+from math import gcd
 
 # Configuración
+parser = argparse.ArgumentParser(description="Generador de caracteres aleatorios")
+parser.add_argument("--testing", type=str, default="False")
+args = parser.parse_args()
+TESTING = args.testing.lower() == "true"
 
-np.random.seed(26)
-GENERATE_ONE = True
+np.random.seed(26)  
 DATA_DIR = "./data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-if GENERATE_ONE:
-    n_samples = [20000, 40000]
+"""
+(I) p = k^2
+(II) N sea divisible por k y k^2
+=> N = k multiplo y k^2 multiplo
+=> Basta con N = multiplo de k^2
+Usaremos potencias de 2
+"""
+K_VALUES = [2, 3, 4, 5, 6, 8]
+P_VALUES = [k**2 for k in K_VALUES]
+
+def mcm(a, b):
+    return a * b // gcd(a, b)
+
+def mcm_list(values):
+    result = 1
+    for v in values:
+        result = mcm(result, v)
+    return result
+
+mcm_total = mcm_list(P_VALUES)
+print(f"MCM de todos los k² = {mcm_total}")
+
+if TESTING:
+    n_samples = [18]
 else:
-    n_samples = [5000, 10000, 20000, 40000]
-
-
-n_features = 20
-n_clases = 2
-
-for n_sample in n_samples:
-
-    X = np.random.rand(n_sample, n_features)
-    y = np.random.randint(0, n_clases, size=n_sample)
-
-    print("X.shape: ", X.shape)
-    print("y.shape: ", y.shape)
+    MULTIPLIERS = [1, 2, 3, 4, 6, 8]
     
+VALID_N = [mcm_total * m for m in MULTIPLIERS]
+
+
+
+CHARSET = string.ascii_letters
+# +string.digits
+
+for n_sample in VALID_N:
+    chars = np.random.choice(list(CHARSET), n_sample)
     final_path_data = os.path.join(DATA_DIR, f"{n_sample}")
     os.makedirs(final_path_data, exist_ok=True)
-
-    np.save(os.path.join(final_path_data, f"X.npy"), X)
-    np.save(os.path.join(final_path_data, f"y.npy"), y)
+    
+    file_path = os.path.join(final_path_data, "chars.txt")
+    with open(file_path, "w", encoding="utf-8") as f:
+        for c in chars:
+            c = c.lower()
+            f.write(c + "\n")
+    print(f"Archivo generado: {file_path}")
+    
 
 
