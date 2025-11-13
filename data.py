@@ -22,7 +22,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 => Basta con N = multiplo de k^2
 Usaremos potencias de 2
 """
-K_VALUES = [2, 4, 7, 8, 10]
+K_VALUES = [1, 2, 4, 7, 8, 10]
 P_VALUES = [k**2 for k in K_VALUES]
 
 def mcm(a, b):
@@ -54,13 +54,13 @@ CHARSET = string.ascii_letters
 for n_sample in VALID_N:
     chars = np.random.choice(list(CHARSET), n_sample)
     final_path_data = os.path.join(DATA_DIR, f"{n_sample}")
-    os.makedirs(final_path_data, exist_ok=True)
+    # os.makedirs(final_path_data, exist_ok=True)
     
     file_path = os.path.join(final_path_data, "chars.txt")
-    with open(file_path, "w", encoding="utf-8") as f:
-        for c in chars:
-            c = c.lower()
-            f.write(c + "\n")
+    # with open(file_path, "w", encoding="utf-8") as f:
+    #     for c in chars:
+    #         c = c.lower()
+    #         f.write(c + "\n")
     print(f"Archivo generado: {file_path}")
     
 

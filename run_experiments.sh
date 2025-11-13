@@ -9,7 +9,7 @@ else
   echo "Data already exists."
 fi
 
-K_VALUES=(2 4 7 8 10)
+K_VALUES=(1 2 4 7 8 10)
 processes=()
 for k in "${K_VALUES[@]}"; do
   processes+=($((k * k)))
