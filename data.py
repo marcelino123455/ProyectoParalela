@@ -22,7 +22,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 => Basta con N = multiplo de k^2
 Usaremos potencias de 2
 """
-K_VALUES = [2, 6, 10, 14, 20]
+K_VALUES = [2, 4, 7, 8, 10]
 P_VALUES = [k**2 for k in K_VALUES]
 
 def mcm(a, b):
@@ -41,7 +41,7 @@ if TESTING:
     n_samples = [18]
 else:
     start = 2
-    end = 6
+    end = 5
     MULTIPLIERS = [3**i for i in range(start, end + 1)]
     
 VALID_N = [mcm_total * m for m in MULTIPLIERS]

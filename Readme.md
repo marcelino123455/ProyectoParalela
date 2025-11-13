@@ -41,7 +41,8 @@ mpirun --oversubscribe -np  4 ./main
 
 
 # Experimentos
-Set `TESTING=False` in `proyecto_v1.py` and `proyecto_v2.py`, then `GENERATE_ONE = FALSE` in `data.py` to run the experiments.
+Before make experimentations please you have to enseure that K_VALUES are the same for `data.py` and `run_experiments.sh`.
+
 ```bash
 chmod +x run_experiments.sh
 ./run_experiments.sh
