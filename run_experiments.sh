@@ -15,7 +15,7 @@ for k in "${K_VALUES[@]}"; do
   processes+=($((k * k)))
 done
 
-versions=(1)
+versions=(1 2)
 
 for v in "${versions[@]}"; do
   echo "Compiling version v${v}..."
@@ -29,4 +29,8 @@ for v in "${versions[@]}"; do
     mpirun --oversubscribe -np "${p}" ".//main"
     echo "-----------------------------------------"
   done
+
+  echo "Saliending xd v${v}..."
+  cd ".."
+
 done

@@ -41,8 +41,11 @@ if TESTING:
     n_samples = [18]
 else:
     start = 2
-    end = 5
-    MULTIPLIERS = [3**i for i in range(start, end + 1)]
+    end = 6
+    # For N chiquitos
+    MULTIPLIERS = [1, 2, 3] 
+    MULTIPLIERS += [3**i for i in range(start, end + 1)]
+
 
 if TESTING:
     VALID_N = [18]   
