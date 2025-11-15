@@ -26,7 +26,7 @@ mpic++ -o main main.cpp
 
 Para una ejecución en modeo de testeo con N = 18 Y p = 9 (Puede ser usado para debugging): 
 ```bash
-mpirun --oversubscribe -np  9 ./main --testing
+mpirun --oversubscribe -np  9 ./main --testing --check
 ```
 
 Si desea ejecutar todos los ejemplos y verificar la correctitud del ordenamiento:
@@ -62,9 +62,17 @@ proyecto/
 │   ├── 14400/
 │   └── 28800/
 ```
+
+
 # TODO
 
 - [ ] v2
 - [ ] speedup, efficiency, etc chart
 - [ ] Quick Sort paralelo copy page and run
-- [ ] count flops   
+- [ ] count flops
+
+
+# Graficos
+
+## Reparticion de la cuadrícula
+![alt text](image.png)

@@ -43,8 +43,11 @@ else:
     start = 2
     end = 5
     MULTIPLIERS = [3**i for i in range(start, end + 1)]
-    
-VALID_N = [mcm_total * m for m in MULTIPLIERS]
+
+if TESTING:
+    VALID_N = [18]   
+else: 
+    VALID_N = [mcm_total * m for m in MULTIPLIERS]
 
 
 
@@ -54,13 +57,13 @@ CHARSET = string.ascii_letters
 for n_sample in VALID_N:
     chars = np.random.choice(list(CHARSET), n_sample)
     final_path_data = os.path.join(DATA_DIR, f"{n_sample}")
-    # os.makedirs(final_path_data, exist_ok=True)
+    os.makedirs(final_path_data, exist_ok=True)
     
     file_path = os.path.join(final_path_data, "chars.txt")
-    # with open(file_path, "w", encoding="utf-8") as f:
-    #     for c in chars:
-    #         c = c.lower()
-    #         f.write(c + "\n")
+    with open(file_path, "w", encoding="utf-8") as f:
+        for c in chars:
+            c = c.lower()
+            f.write(c + "\n")
     print(f"Archivo generado: {file_path}")
     
 

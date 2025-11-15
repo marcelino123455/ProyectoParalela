@@ -23,8 +23,13 @@ bool check_flag(int argc, char *argv[], const string& flag) {
 ostream& operator<<(ostream& os, const vector<vector<int>>& mat) {
     for (int i = 0; i < mat.size(); ++i) {
         for (int j = 0; j < mat[i].size(); ++j) {
+
             if (i==0 or i ==1){
-            os << char(mat[i][j]) << ' ';
+                if (mat[i][j] ==0){
+                    os<<'0'<<' '; 
+                }else{
+                    os << char(mat[i][j]) << ' ';
+                }
             }else{
                 os << mat[i][j] << ' ';
             }
@@ -184,10 +189,10 @@ int main(int argc,char *argv[]){
         int N_p = N/p; 
 
         // PASO 0: Llegar al input como en el algortimo 
+        // Repartir la data solo a la primera fial de la cuadrícula de 
+        // procesos
         master_msg(rank, "PASO 0: Input", TESTING);
-
         double t0c_start = MPI_Wtime();
-
         vector<vector<int>> M(4, vector<int>(N/raiz_p, 0)); 
         /*
             0 1 2
@@ -199,11 +204,21 @@ int main(int argc,char *argv[]){
             2 5 8
         */
         // Repartir la data:
-        int pos = (rank%raiz_p)*N_p; 
+        int row_0 = rank % raiz_p;
+        MPI_Comm row0_comm;
+        if (row_0 == 0) {
+            MPI_Comm_split(MPI_COMM_WORLD, 0, rank, &row0_comm);
+        } else {
+            MPI_Comm_split(MPI_COMM_WORLD, MPI_UNDEFINED, rank, &row0_comm);
+        }
         double t0c_end = MPI_Wtime();
-
         double t0comm_start = MPI_Wtime();
-        MPI_Scatter(data.data(),N_p, MPI_INT, M[0].data() + pos, N_p, MPI_INT,0, MPI_COMM_WORLD ); 
+        if (row_0 == 0) {
+            int row0_rank;
+            MPI_Comm_rank(row0_comm, &row0_rank);
+            MPI_Scatter(data.data(), N/raiz_p, MPI_INT, M[0].data(), N/raiz_p, MPI_INT, 0, row0_comm);
+        } 
+
         double t0comm_end = MPI_Wtime();
         tiempos_comunicacion[0] = t0comm_end - t0comm_start;
         tiempos_computo[0] = t0c_end - t0c_start; 
@@ -221,19 +236,14 @@ int main(int argc,char *argv[]){
         MPI_Comm_rank(col_comm, &col_rank);
         MPI_Comm_size(col_comm, &col_size);
         double t1c_end = MPI_Wtime();
-
-        // Gossip con brodcast
-        double t1comm_start = MPI_Wtime();
-
-        // Si funca ya que cada i es el que manda entonces los otros no hacen brodcast
-        // Solo lo vne y se hace visible para los demás procesos (check)
         
-        for (int i = 0; i< col_size  ; i++){ // sqrt(p)*log(sqrt(p))*N/p
-            int pos = i*N_p; 
-            MPI_Bcast(M[0].data()+pos, N/p, MPI_INT, i, col_comm);  
-        }
+        // Gossip con brodcast
+        // v2: Ahora solo es un simple brodcast
+        double t1comm_start = MPI_Wtime();
+        MPI_Bcast(M[0].data(), N/raiz_p, MPI_INT,0, col_comm);
         double t1comm_end = MPI_Wtime();
         if (TESTING) debug(rank, M, p,"STEP 1"); 
+
         tiempos_comunicacion[1] = t1comm_end - t1comm_start;
         tiempos_computo[1] =  t1c_end - t1c_start;
 
@@ -257,7 +267,8 @@ int main(int argc,char *argv[]){
         double t2c_end = MPI_Wtime();
 
         double t2comm_start = MPI_Wtime();
-        MPI_Bcast(M[1].data(), N/raiz_p, MPI_INT, row, row_comm); 
+        MPI_Bcast(M[1].data(), N/raiz_p, MPI_INT, row, row_comm);
+
         double t2comm_end = MPI_Wtime(); 
         if (TESTING) debug(rank, M, p,"STEP 2"); 
         tiempos_comunicacion[2] = t2comm_end - t2comm_start;
@@ -341,9 +352,9 @@ int main(int argc,char *argv[]){
                 master_msg(rank, "CHECK - Ordered ok", TESTING);  
 
                 if (is_ordered){
-                    cout<<u8"CHECK: 🦖 :) All oki don worry be happy"<<endl; 
+                    cout<<u8"\nCHECK: 🦖 :) All oki don worry be happy"<<endl; 
                 } else{
-                    cerr<<u8"CHECK: 😞 :( Terrible lloremos"<<endl; 
+                    cerr<<u8"\nCHECK: 😞 :( Terrible lloremos"<<endl; 
                 }
             }
             double t6comm_end = MPI_Wtime();
@@ -357,7 +368,7 @@ int main(int argc,char *argv[]){
 
         // Guardados de tiempos
         if (rank == 0) {
-            fs::path outdir = "../tiempos/v1/" + to_string(p);
+            fs::path outdir = "../tiempos/v2/" + to_string(p);
             fs::create_directories(outdir);
             fs::path outfile = outdir / "tiempos.csv";
 
