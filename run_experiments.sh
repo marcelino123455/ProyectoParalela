@@ -32,5 +32,4 @@ for v in "${versions[@]}"; do
 
   echo "Saliending xd v${v}..."
   cd ".."
-
 done

@@ -54,7 +54,17 @@ La data está estructurada de la sigueinte forma, dónde el núemero representa 
 
 !Nota: Es relevante debido a que N debe ser múltiplo de raíz de p.
 
+# QuickSort
+Añadimos `quicksort_mpi.cpp` el cual puede ser ejcutado de la siguiente forma:
 
+```bash
+mpicc quicksort_mpi.c -o quicksort_mpi -lm
+```
+
+```bash
+mpirun -np 4 ./quicksort_mpi 18 ../data/18/chars.txt
+```
+Donde N representa la carpeta donde se encuentra la data. Tambien puede correr con el flag: `--check`, sin embargo no lo recomendamos por la cantidad de data. 
 
 ```bash
 proyecto/
