@@ -131,10 +131,10 @@ int* readData(const char* path, int outSize) {
     char c;
     int i = 0;
 
-    printf("El array tiene:\n");
+    // printf("El array tiene:\n");
     while (i < outSize && fscanf(file, " %c", &c) == 1) {
         arr[i] = (int)c;  
-        printf("%d ", arr[i]);
+        // printf("%d ", arr[i]);
         i++;
     }
 
@@ -254,7 +254,6 @@ int main(int argc, char *argv[]) {
             if (!exists) {
                 fprintf(fout, "Step,Computo,Comunicacion,N\n");
             }
-            // 0: computo separado, 1: total, 2: inicializacion
             fprintf(fout, "0,%.8f,%.8f,%d\n", tiempo_computo, tiempo_comunicacion, SIZE);; // Medición de tiempos separadp
             fprintf(fout, "1,%.8f,0.00000000,%d\n", tiempo_total, SIZE);// Tiempo total, la columna de comunicación no cuenta
             fprintf(fout, "2,%.8f,0.00000000,%d\n", inicializacion, SIZE);// Tiempo de inicialización, la columna de comunicación no cuenta

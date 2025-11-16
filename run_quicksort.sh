@@ -9,15 +9,18 @@ else
   echo "Data already exists."
 fi
 
-K_VALUES=(1 2 4 7 8 10)
+K_VALUES=(1 2 3 4 5 6)
 processes=()
 for k in "${K_VALUES[@]}"; do
   processes+=($((k * k)))
 done
 
-# N_VALUES=("78400" "235200" "156800" "6350400" "2116800" "705600" "19051200" "57153600")
 
-N_VALUES=("18")
+echo "Reading N values from ./data..."
+N_VALUES=($(ls data))
+echo "N_VALUES detected: ${N_VALUES[@]}"
+
+# N_VALUES=("18")
 
 for n in "${N_VALUES[@]}"; do
   echo "Entering quickSort${n}..."
@@ -40,8 +43,11 @@ for n in "${N_VALUES[@]}"; do
 
   for p in "${processes[@]}"; do
     echo "➡ Running with ${p} processes..."
-    mpirun --oversubscribe -np "${p}" ./quicksort_mpi "${n}" "${DATA_FILE}"
+    mpirun -np "${p}" ./quicksort_mpi "${n}" "${DATA_FILE}"
     echo "----------------------------------------"
   done
   
+  echo "saliendig quickSort${n}..."
+  cd ".." 
+
 done

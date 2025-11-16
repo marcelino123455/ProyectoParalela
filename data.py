@@ -22,7 +22,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 => Basta con N = multiplo de k^2
 Usaremos potencias de 2
 """
-K_VALUES = [1, 2, 4, 7, 8, 10]
+K_VALUES = [1, 2, 3, 4, 5, 6]
 P_VALUES = [k**2 for k in K_VALUES]
 
 def mcm(a, b):
@@ -40,10 +40,10 @@ print(f"MCM de todos los k² = {mcm_total}")
 if TESTING:
     n_samples = [18]
 else:
-    start = 2
-    end = 6
+    start = 4
+    end = 9 
     # For N chiquitos
-    MULTIPLIERS = [1, 2, 3] 
+    MULTIPLIERS = [1, 3, 6] 
     MULTIPLIERS += [3**i for i in range(start, end + 1)]
 
 

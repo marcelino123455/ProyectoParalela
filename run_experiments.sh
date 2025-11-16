@@ -9,7 +9,7 @@ else
   echo "Data already exists."
 fi
 
-K_VALUES=(1 2 4 7 8 10)
+K_VALUES=(1 2 3 4 5 6)
 processes=()
 for k in "${K_VALUES[@]}"; do
   processes+=($((k * k)))
@@ -26,7 +26,7 @@ for v in "${versions[@]}"; do
 
   for p in "${processes[@]}"; do
     echo "Running version ${v} with ${p} processes..."
-    mpirun --oversubscribe -np "${p}" ".//main"
+    mpirun -np "${p}" ".//main"
     echo "-----------------------------------------"
   done
 

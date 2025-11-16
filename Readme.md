@@ -66,6 +66,24 @@ mpirun -np 4 ./quicksort_mpi 18 ../data/18/chars.txt
 ```
 Donde N representa la carpeta donde se encuentra la data. Tambien puede correr con el flag: `--check`, sin embargo no lo recomendamos por la cantidad de data. 
 
+
+
+# Experimeentacion
+La experimentación se limito a 40 procesos debido a que contamos con 40 cores en khipu en el node de acceso: 
+```bash
+lscpu
+
+Architecture:        x86_64
+CPU op-mode(s):      32-bit, 64-bit
+Byte Order:          Little Endian
+CPU(s):              80
+On-line CPU(s) list: 0-79
+Thread(s) per core:  2
+Core(s) per socket:  20
+Socket(s):           2
+```
+
+
 ```bash
 proyecto/
 ├── data/
