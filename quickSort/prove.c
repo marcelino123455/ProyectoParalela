@@ -2,14 +2,14 @@
 #include<stdio.h>
 #include <stdlib.h>
 #include "math.h"
-#include <errno.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdbool.h>
-// #define SIZE 1000000
-// #define SIZE 18
+// #define SIZE 23619600
 
+#define SIZE 23619600
+
+
+
+// https://github.com/triasamo1/Quicksort-Parallel-MPI/blob/master/quicksort_mpi.c
 /*
     Divides the array given into two partitions
         - Lower than pivot
@@ -115,79 +115,29 @@ int quicksort_recursive(int* arr, int arrSize, int currProcRank, int maxRank, in
     }
 }
 
-int* readData(const char* path, int outSize) {
-    FILE* file = fopen(path, "r");
-    if (!file) {
-        printf("Error al abrir %s\n", path);
-        return NULL;
-    }
-
-    int* arr = malloc(sizeof(int) * outSize);  
-    if (!arr) {
-        printf("Error al asignar memoria\n");
-        fclose(file);
-        return NULL;
-    }
-    char c;
-    int i = 0;
-
-    // printf("El array tiene:\n");
-    while (i < outSize && fscanf(file, " %c", &c) == 1) {
-        arr[i] = (int)c;  
-        // printf("%d ", arr[i]);
-        i++;
-    }
-
-    printf("\nLeídos: %d/%d\n", i, outSize);
-
-    fclose(file);
-    return arr;
-}
-
-void ensure_outdir_for_size(int nprocs) {
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "mkdir -p ../tiempos/quicksort_mpi/%d", nprocs);
-    system(cmd);
-}
-
-int file_exists(const char* path) {
-    return access(path, F_OK) == 0;
-}
-
-bool check_flag(int argc, char *argv[], const char* flag) {
-    for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], flag) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
 
 int main(int argc, char *argv[]) {
-    double start_timer =MPI_Wtime();
-    double ini_start =MPI_Wtime();
-    int SIZE = atoi(argv[1]);
-    int N = SIZE;
-    char* N_path = argv[2];
-    bool CHECK = check_flag(argc, argv, "--check");
-
     // int unsorted_array[SIZE]; 
-    int *unsorted_array = NULL;
+    int *unsorted_array = malloc(SIZE * sizeof(int));
     int array_size = SIZE;
     int size, rank;
     // Start Parallel Execution
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-
     if(rank==0){
-        unsorted_array = readData(N_path, SIZE);
+        printf("Starting\n"); 
+    }
+    
+    if(rank==0){
+        // --- RANDOM ARRAY GENERATION ---
+        printf("Creating Random List of %d elements\n", SIZE);
+        int j = 0;
+        for (j = 0; j < SIZE; ++j) {
+            unsorted_array[j] =(int) rand() % 1000;
+        }
+        printf("Created\n");
 	}
-    double ini_end =MPI_Wtime();
-    double inicializacion =ini_end - ini_start; 
-
-    double tiempo_computo = 0.0;
-    double tiempo_comunicacion = 0.0;
 
     // Calculate in which layer of the tree each Cluster belongs
     int rankPower = 0;
@@ -196,9 +146,9 @@ int main(int argc, char *argv[]) {
     }
     // Wait for all clusters to reach this point 
     MPI_Barrier(MPI_COMM_WORLD);
-    double finish_timer;
+    double start_timer, finish_timer;
     if (rank == 0) {
-	    // start_timer = MPI_Wtime();
+	    start_timer = MPI_Wtime();
         // Cluster Zero(Master) starts the Execution and
         // always runs recursively and keeps the left bigger half
         quicksort_recursive(unsorted_array, array_size, rank, size - 1, rankPower);    
@@ -207,81 +157,42 @@ int main(int argc, char *argv[]) {
         // they sort it and they send it back.
         MPI_Status status;
         int subarray_size;
-        
-        double t0 = MPI_Wtime();
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-        double t1 = MPI_Wtime();
-        
         // Capturing size of the array to receive
-        t0 = MPI_Wtime();
         MPI_Get_count(&status, MPI_INT, &subarray_size);
-        t1 = MPI_Wtime();
-        tiempo_comunicacion += (t1 - t0);
-
 	    int source_process = status.MPI_SOURCE;     
         // int subarray[subarray_size];
-        int *subarray = (int*) malloc(subarray_size * sizeof(int));
-        
-        t0 = MPI_Wtime();
+        int *subarray = malloc(subarray_size * sizeof(int));
         MPI_Recv(subarray, subarray_size, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        t1 = MPI_Wtime();
-        tiempo_comunicacion += (t1 - t0);
-        
         quicksort_recursive(subarray, subarray_size, rank, size - 1, rankPower);
-        
-        t0 = MPI_Wtime();
         MPI_Send(subarray, subarray_size, MPI_INT, source_process, 0, MPI_COMM_WORLD);
-        t1 = MPI_Wtime();
-        tiempo_comunicacion += (t1 - t0);
-
+        free(subarray); 
     };
-
-    if (rank == 0) {
-        finish_timer = MPI_Wtime();
-        double tiempo_total = finish_timer - start_timer; 
-        double tiempo_computo = tiempo_total - (tiempo_comunicacion + inicializacion);
-
-        ensure_outdir_for_size(size);
-        char outfile[256];
-        snprintf(outfile, sizeof(outfile), "../tiempos/quicksort_mpi/%d/tiempos.csv", size);
-
-
-        int exists = file_exists(outfile);
-        FILE *fout = fopen(outfile, "a");
-        if (!fout) {
-            fprintf(stderr, "No se pudo abrir %s para append: %s\n", outfile, strerror(errno));
-        } else {
-            if (!exists) {
-                fprintf(fout, "Step,Computo,Comunicacion,N\n");
-            }
-            fprintf(fout, "0,%.8f,%.8f,%d\n", tiempo_computo, tiempo_comunicacion, SIZE);; // Medición de tiempos separadp
-            fprintf(fout, "1,%.8f,0.00000000,%d\n", tiempo_total, SIZE);// Tiempo total, la columna de comunicación no cuenta
-            fprintf(fout, "2,%.8f,0.00000000,%d\n", inicializacion, SIZE);// Tiempo de inicialización, la columna de comunicación no cuenta
-            fclose(fout);
-            printf("Archivo de tiempos guardado en: %s\n", outfile);
-        }
+    if(rank==0){
+        printf("Ending\n"); 
     }
     
-    if (CHECK){
-        if(rank==0){
-            finish_timer = MPI_Wtime();
-            printf("Total time for %d Clusters : %2.2f sec \n",size, finish_timer-start_timer);
+    if(rank==0){
+        finish_timer = MPI_Wtime();
+	    printf("Total time for %d Clusters : %2.2f sec \n",size, finish_timer-start_timer);
 
-            // --- VALIDATION CHECK ---
-            printf("Checking.. \n");
-            bool error = false;
-            int i=0;
-            for(i=0;i<SIZE-1;i++) { 
-                if (unsorted_array[i] > unsorted_array[i+1]){
-                    error = true;
-                    printf("error in i=%d \n", i);
-                }
-            }
-            if(error)
-                printf("Error..Not sorted correctly\n");
-            else
-                printf("Correct!\n");        
-        }
+        // --- VALIDATION CHECK ---
+        printf("Checking.. \n");
+        bool error = false;
+        int i=0;
+        // for(i=0;i<SIZE-1;i++) { 
+        //     if (unsorted_array[i] > unsorted_array[i+1]){
+		//         error = true;
+        //         printf("error in i=%d \n", i);
+        //     }
+        // }
+        if(error)
+            printf("Error..Not sorted correctly\n");
+        else
+            printf("Correct!\n");        
+    }
+    if (rank == 0) {
+        free(unsorted_array);
     }
        
     MPI_Finalize();

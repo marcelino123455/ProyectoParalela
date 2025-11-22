@@ -47,7 +47,7 @@ for n in "${N_VALUES[@]}"; do
     echo "----------------------------------------"
   done
   
-  echo "saliendig quickSort${n}..."
+  echo "[Ending ${N}]/saliendig quickSort ${n}..."
   cd ".." 
 
 done
