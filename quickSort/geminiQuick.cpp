@@ -6,10 +6,17 @@
 #include <ctime>
 #include <cmath>
 #include <numeric>
+#include <fstream>
+#include <filesystem>
+using namespace std;
+namespace fs = filesystem;
 
-// Configuration
-// const long TOTAL_NUMBERS = 70000000; // 70 Million
-const long TOTAL_NUMBERS = 20000000; // 70 Million
+double t_comm = 0.0; 
+double get_Time_start = 0.0; 
+double get_Time_end = 0.0; 
+
+double t_comp= 0.0; 
+
 
 void parallel_quicksort(std::vector<int>& local_data, int rank, int size) {
     // 1. Initial local sort (Hyperquicksort optimization)
@@ -58,17 +65,22 @@ void parallel_quicksort(std::vector<int>& local_data, int rank, int size) {
         
         MPI_Comm sub_comm;
         int color = rank / (1 << (steps - i)); // Group ID
+        get_Time_start = MPI_Wtime(); 
         MPI_Comm_split(MPI_COMM_WORLD, color, rank, &sub_comm);
-        
+        get_Time_end = MPI_Wtime(); 
+        t_comm+= (get_Time_end -get_Time_start); 
+
         int sub_rank;
         MPI_Comm_rank(sub_comm, &sub_rank);
         
         if (sub_rank == 0) {
              if (!local_data.empty()) pivot = local_data[local_data.size() / 2];
         }
+        get_Time_start = MPI_Wtime(); 
         MPI_Bcast(&pivot, 1, MPI_INT, 0, sub_comm);
         MPI_Comm_free(&sub_comm);
-
+        get_Time_end = MPI_Wtime(); 
+        t_comm+= (get_Time_end -get_Time_start); 
         // 3. Partition Data
         // Find split point in sorted array
         auto split_it = std::lower_bound(local_data.begin(), local_data.end(), pivot);
@@ -97,17 +109,23 @@ void parallel_quicksort(std::vector<int>& local_data, int rank, int size) {
         int recv_count = 0;
 
         // Exchange sizes first
+        
+        get_Time_start = MPI_Wtime(); 
         MPI_Sendrecv(&send_count, 1, MPI_INT, partner, 0,
                      &recv_count, 1, MPI_INT, partner, 0,
                      MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
+        get_Time_end = MPI_Wtime(); 
+        t_comm+= (get_Time_end-get_Time_start); 
+        
         std::vector<int> recv_data(recv_count);
 
         // Exchange actual data
+        get_Time_start = MPI_Wtime(); 
         MPI_Sendrecv(send_data.data(), send_count, MPI_INT, partner, 1,
                      recv_data.data(), recv_count, MPI_INT, partner, 1,
                      MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
+        get_Time_end = MPI_Wtime(); 
+        t_comm+= (get_Time_end -get_Time_start); 
         // 5. Merge Data
         // Since we kept a sorted chunk and received a sorted chunk (Hyperquicksort property),
         // we can merge them efficiently.
@@ -120,6 +138,36 @@ void parallel_quicksort(std::vector<int>& local_data, int rank, int size) {
         // local_data is now sorted for the next step
     }
 }
+
+vector<int> readData(fs::path path){
+    vector<int> data; 
+    ifstream file(path);
+    char c;
+    while (file>>c) { 
+        data.push_back(int(c));
+    }
+    return data; 
+}
+
+vector<fs::path> listdir(const fs::path& path, bool TESTING){
+    vector<fs::path> files;
+    fs::path N_18 = path/"18"; 
+    if(TESTING){
+        vector<fs::path> files_presentacion{N_18};
+        return files_presentacion;   
+    }
+    for (const auto& entry : fs::directory_iterator(path)) {
+        if (entry.path() !=N_18 ){
+            files.push_back(entry.path()); 
+        } 
+    }
+    sort(files.begin(), files.end());
+    
+
+    
+    return files; 
+}
+
 
 int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
@@ -135,16 +183,30 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    // Primera fila Computo y Comunicación
+    // Segunda fila es tiempo total que se pondrá al vector de tiempos computo
+
+
     std::vector<int> local_data;
     double start_time;
 
-    // --- 1. Data Generation ---
+    // fs::path DIR = "../data";
+    int TOTAL_NUMBERS = std::stol(argv[1]);
+    // --- 1. Reading Data ---
     if (rank == 0) {
-        std::cout << "Generating " << TOTAL_NUMBERS << " random numbers..." << std::endl;
-        std::vector<int> all_data(TOTAL_NUMBERS);
-        srand(42);
-        for (auto& x : all_data) x = rand();
 
+        std::cout << "Starting to read " << TOTAL_NUMBERS << std::endl;
+        
+        fs::path name_file = "../data"; 
+        fs::path chars_file= "chars.txt"; 
+        fs::path path_data = argv[1];
+        fs::path path_final = name_file/path_data/chars_file; 
+        vector<int> all_data  = readData(path_final);
+        cout<<"Path: "<<path_final<<endl; 
+
+        // std::vector<int> all_data(TOTAL_NUMBERS);
+        // srand(42);
+        // for (auto& x : all_data) x = rand();
         start_time = MPI_Wtime();
 
         // Handle initial scatter (splitting variable sizes if N % P != 0)
@@ -164,18 +226,25 @@ int main(int argc, char** argv) {
         local_data.resize(send_counts[0]);
         
         // Scatterv is needed because chunks might not be identical size
+
+        get_Time_start = MPI_Wtime();
         MPI_Scatterv(all_data.data(), send_counts.data(), displs.data(), MPI_INT,
                      local_data.data(), send_counts[0], MPI_INT, 0, MPI_COMM_WORLD);
+        get_Time_end = MPI_Wtime(); 
+        t_comm+= (get_Time_end -get_Time_start);     
     } 
     else {
         int base_count = TOTAL_NUMBERS / size;
         int remainder = TOTAL_NUMBERS % size;
         int my_count = base_count + (rank < remainder ? 1 : 0);
         local_data.resize(my_count);
-        
+        get_Time_start = MPI_Wtime();
         MPI_Scatterv(NULL, NULL, NULL, MPI_INT,
                      local_data.data(), my_count, MPI_INT, 0, MPI_COMM_WORLD);
-    }
+        get_Time_end = MPI_Wtime(); 
+        t_comm+= (get_Time_end - get_Time_start) ;
+        
+        }
 
     // --- 2. Parallel Sorting ---
     parallel_quicksort(local_data, rank, size);
@@ -185,7 +254,10 @@ int main(int argc, char** argv) {
     int local_count = local_data.size();
     std::vector<int> recv_counts(size);
     
+    get_Time_start = MPI_Wtime();
     MPI_Gather(&local_count, 1, MPI_INT, recv_counts.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
+    get_Time_end = MPI_Wtime(); 
+    t_comm+= (get_Time_end -get_Time_start); 
 
     std::vector<int> final_data;
     std::vector<int> displs(size);
@@ -199,15 +271,45 @@ int main(int argc, char** argv) {
         }
     }
 
+    get_Time_start = MPI_Wtime(); 
     MPI_Gatherv(local_data.data(), local_count, MPI_INT,
                 final_data.data(), recv_counts.data(), displs.data(), MPI_INT,
                 0, MPI_COMM_WORLD);
+    get_Time_end = MPI_Wtime();     
+    t_comm+= (get_Time_end -get_Time_start); 
 
     // --- 4. Verification ---
     if (rank == 0) {
         double end_time = MPI_Wtime();
+        // Save resultados
+        fs::path outdir = "../tiempos/quickSort/" + to_string(size);
+        fs::create_directories(outdir);
+        fs::path outfile = outdir / "tiempos.csv";
+
+        bool existe = fs::exists(outfile);
+        ofstream fout(outfile, ios::app); 
+        fout << fixed << setprecision(8);
+        
+        if (!existe) {
+            fout << "Step,Computo,Comunicacion,N\n";
+        }
+        // for (int i = 0; i < 7; i++) {
+            cout<< "Tcomm = "<<t_comm<<endl; 
+            fout << 0 << "," << (end_time - start_time) -t_comm<< "," << t_comm <<"," <<argv[1]<< "\n";
+            fout << 1 << "," << (end_time - start_time) << "," << 0 <<"," <<argv[1]<< "\n";
+        // }
+        fout.close();
+            cout << "Archivo de tiempos guardado en: " << outfile << endl;
+
+
+
+
+
         std::cout << "Sorting completed in " << (end_time - start_time) << " seconds." << std::endl;
         
+
+
+
         bool sorted = true;
         long count = final_data.size();
         if (count != TOTAL_NUMBERS) {

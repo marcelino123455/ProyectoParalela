@@ -9,15 +9,17 @@ else
   echo "Data already exists."
 fi
 
-K_VALUES=(1 2 3 4 5 6)
-processes=()
-for k in "${K_VALUES[@]}"; do
-  processes+=($((k * k)))
-done
+# K_VALUES=(1 2 3 4 5 6)
+# K_VALUES=(1 2 3 4 5 6)
+processes=(1 2 4 8 16 32)
+# for k in "${K_VALUES[@]}"; do
+#   processes+=($((k * k)))
+# done
 
 
 echo "Reading N values from ./data..."
-N_VALUES=($(ls data))
+# N_VALUES=($(ls data))
+N_VALUES=($(ls data | grep -v '^18$'))
 echo "N_VALUES detected: ${N_VALUES[@]}"
 
 # N_VALUES=("18")
@@ -28,8 +30,8 @@ for n in "${N_VALUES[@]}"; do
 
   echo "----------------------------------------"
   echo "Compiling quicksort_mpi for N=${n} ..."
-  mpicc quicksort_mpi.c -o quicksort_mpi -lm
-  
+  mpic++ -o geminiQuick geminiQuick.cpp 
+
   DATA_FILE="../data/${n}/chars.txt"
 
   if [ ! -f "$DATA_FILE" ]; then
@@ -37,17 +39,17 @@ for n in "${N_VALUES[@]}"; do
     exit 1
   fi
 
-    echo "Running tests for N=${n}"
+  echo "Running tests for N=${n}"
   echo "Using input file: $DATA_FILE"
   echo "----------------------------------------"
 
   for p in "${processes[@]}"; do
     echo "➡ Running with ${p} processes..."
-    mpirun -np "${p}" ./quicksort_mpi "${n}" "${DATA_FILE}"
+    mpirun -np "${p}" ./geminiQuick "${n}"
     echo "----------------------------------------"
   done
   
-  echo "[Ending ${N}]/saliendig quickSort ${n}..."
+  echo "[Ending ${N}]/saliendig  XD quickSort ${n}..."
   cd ".." 
 
 done

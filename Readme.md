@@ -55,16 +55,18 @@ La data está estructurada de la sigueinte forma, dónde el núemero representa 
 !Nota: Es relevante debido a que N debe ser múltiplo de raíz de p.
 
 # QuickSort
-Añadimos `quicksort_mpi.cpp` el cual puede ser ejcutado de la siguiente forma:
+Añadimos `geminiQuick.cpp` el cual puede ser ejecutado de la siguiente forma:
 
 ```bash
-mpicc quicksort_mpi.c -o quicksort_mpi -lm
+
+mpic++ -o geminiQuick geminiQuick.cpp 
 ```
 
 ```bash
-mpirun -np 4 ./quicksort_mpi 18 ../data/18/chars.txt
+mpirun -np 16 ./geminiQuick 23619600
 ```
-Donde N representa la carpeta donde se encuentra la data. Tambien puede correr con el flag: `--check`, sin embargo no lo recomendamos por la cantidad de data. 
+Donde el segundo numero representa la cantidad de datos. 
+Tener en cuenta que la cantidad de procesadores que se deben de usar son potencias de 2. 
 
 
 

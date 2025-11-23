@@ -4,6 +4,22 @@
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
+#include <fstream>
+
+#include <filesystem>
+using namespace std;
+
+namespace fs = filesystem;
+
+vector<int> readData(fs::path path){
+    vector<int> data; 
+    ifstream file(path);
+    char c;
+    while (file>>c) { 
+        data.push_back(int(c));
+    }
+    return data; 
+}
 
 int main() {
     const long N = 20000000; // 20 millones
@@ -13,11 +29,6 @@ int main() {
     std::vector<int> data;
     data.reserve(N);
 
-    // Generar números aleatorios
-    std::srand(42); // Semilla fija para reproducibilidad
-    for (long i = 0; i < N; i++) {
-        data.push_back(std::rand());
-    }
 
     std::cout << "Iniciando sort..." << std::endl;
 
