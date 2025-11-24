@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
+
 #include <fstream>
 
 #include <filesystem>
@@ -21,28 +22,45 @@ vector<int> readData(fs::path path){
     return data; 
 }
 
-int main() {
-    const long N = 20000000; // 20 millones
+int main(int argc, char** argv) {
+    int N = std::stol(argv[1]);
 
-    std::cout << "Generando " << N << " numeros aleatorios..." << std::endl;
-
-    std::vector<int> data;
-    data.reserve(N);
-
+    std::cout << "Leyendo " << N << " numeros..." << std::endl;
+    fs::path name_file = "../data"; 
+    fs::path chars_file= "chars.txt"; 
+    fs::path path_data = argv[1];
+    fs::path path_final = name_file/path_data/chars_file; 
+    std::vector<int> data = readData(path_final); 
 
     std::cout << "Iniciando sort..." << std::endl;
 
-    // Medir tiempo
     auto start = std::chrono::high_resolution_clock::now();
     std::sort(data.begin(), data.end());
     auto end = std::chrono::high_resolution_clock::now();
 
-    // Tiempo en segundos
     std::chrono::duration<double> diff = end - start;
-
     std::cout << "Tiempo total de sort: " << diff.count() << " segundos\n";
 
-    // Verificar que quedó ordenado
+
+    // Guardar resultados
+
+    fs::path outdir = "../tiempos/quickSec";
+    fs::create_directories(outdir);
+    fs::path outfile = outdir / "tiempos.csv";
+
+    bool existe = fs::exists(outfile);
+    ofstream fout(outfile, ios::app); 
+    fout << fixed << setprecision(8);
+
+    if (!existe) {
+        fout << "Tiempo,N\n";
+    }
+    fout << diff.count()<< "," <<argv[1]<< "\n";
+    fout.close();
+        cout << "Archivo de tiempos guardado en: " << outfile << endl;
+
+
+
     bool sorted = true;
     for (long i = 1; i < N; i++) {
         if (data[i-1] > data[i]) {
@@ -50,11 +68,9 @@ int main() {
             break;
         }
     }
-
     if (sorted)
         std::cout << "SUCCESS: correctamente ordenado.\n";
     else
         std::cout << "ERROR: Arreglo NO ordenado.\n";
-
     return 0;
 }
