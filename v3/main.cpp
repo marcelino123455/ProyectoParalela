@@ -268,8 +268,8 @@ int main(int argc,char *argv[]){
 
         double t2comm_start = MPI_Wtime();
         MPI_Bcast(M[1].data(), N/raiz_p, MPI_INT, row, row_comm);
-
         double t2comm_end = MPI_Wtime(); 
+
         if (TESTING) debug(rank, M, p,"STEP 2"); 
         tiempos_comunicacion[2] = t2comm_end - t2comm_start;
         tiempos_computo[2] = t2c_end- t2c_start;
