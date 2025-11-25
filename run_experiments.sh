@@ -7,6 +7,7 @@ if [ ! -d "data_dispersa" ]; then
   source env_paralela/bin/activate
   echo "There is no data_dispersa, running data_dispersa.py"
   python3 data_dispersa.py
+  python3 data.py
   echo "Data_dispersa generation complete"
 else
   echo "Data_dispersa already exists."

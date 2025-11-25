@@ -19,9 +19,9 @@ processes=(1 2 4 8 16 32)
 # done
 
 
-echo "Reading N values from ./data..."
+echo "Reading N values from ./data_dispersa..."
 # N_VALUES=($(ls data))
-N_VALUES=($(ls data | grep -v '^18$'))
+N_VALUES=($(ls data_dispersa | grep -v '^18$'))
 echo "N_VALUES detected: ${N_VALUES[@]}"
 
 # N_VALUES=("18")
@@ -32,9 +32,9 @@ for n in "${N_VALUES[@]}"; do
 
   echo "----------------------------------------"
   echo "Compiling quicksort_mpi for N=${n} ..."
-  mpic++ -o geminiQuick geminiQuick.cpp 
+  mpic++ -o geminiQuick_disperso geminiQuick_disperso.cpp 
 
-  DATA_FILE="../data/${n}/chars.txt"
+  DATA_FILE="../data_dispersa/${n}/nums.txt"
 
   if [ ! -f "$DATA_FILE" ]; then
     echo "ERROR: File $DATA_FILE does not exist"
@@ -47,7 +47,7 @@ for n in "${N_VALUES[@]}"; do
 
   for p in "${processes[@]}"; do
     echo "➡ Running with ${p} processes..."
-    mpirun -np "${p}" ./geminiQuick "${n}"
+    mpirun -np "${p}" ./geminiQuick_disperso "${n}"
     echo "----------------------------------------"
   done
   

@@ -197,8 +197,8 @@ int main(int argc, char** argv) {
 
         std::cout << "Starting to read " << TOTAL_NUMBERS << std::endl;
         
-        fs::path name_file = "../data"; 
-        fs::path chars_file= "chars.txt"; 
+        fs::path name_file = "../data_dispersa"; 
+        fs::path chars_file= "nums.txt"; 
         fs::path path_data = argv[1];
         fs::path path_final = name_file/path_data/chars_file; 
         vector<int> all_data  = readData(path_final);
