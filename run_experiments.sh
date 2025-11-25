@@ -1,12 +1,15 @@
 #!/bin/bash
 
 # check if the ./data exists
-if [ ! -d "data" ]; then
-  echo "There is no data, running data.py"
-  python data.py
-  echo "Data generation complete"
+
+
+if [ ! -d "data_dispersa" ]; then
+  source env_paralela/bin/activate
+  echo "There is no data_dispersa, running data_dispersa.py"
+  python3 data_dispersa.py
+  echo "Data_dispersa generation complete"
 else
-  echo "Data already exists."
+  echo "Data_dispersa already exists."
 fi
 
 K_VALUES=(1 2 3 4 5 6)
@@ -26,7 +29,7 @@ for v in "${versions[@]}"; do
 
   for p in "${processes[@]}"; do
     echo "Running version ${v} with ${p} processes..."
-    mpirun -np "${p}" ".//main"
+    mpirun -np "${p}" "./main"
     echo "-----------------------------------------"
   done
 

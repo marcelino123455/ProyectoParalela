@@ -15,9 +15,9 @@ namespace fs = filesystem;
 vector<int> readData(fs::path path){
     vector<int> data; 
     ifstream file(path);
-    char c;
+    int c;
     while (file>>c) { 
-        data.push_back(int(c));
+        data.push_back(c);
     }
     return data; 
 }
@@ -26,8 +26,8 @@ int main(int argc, char** argv) {
     int N = std::stol(argv[1]);
 
     std::cout << "Leyendo " << N << " numeros..." << std::endl;
-    fs::path name_file = "../data"; 
-    fs::path chars_file= "chars.txt"; 
+    fs::path name_file = "../data_dispersa"; 
+    fs::path chars_file= "nums.txt"; 
     fs::path path_data = argv[1];
     fs::path path_final = name_file/path_data/chars_file; 
     std::vector<int> data = readData(path_final); 

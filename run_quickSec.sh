@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # check if the ./data exists
-if [ ! -d "data" ]; then
-  echo "There is no data, running data.py"
-  python data.py
-  echo "Data generation complete"
+if [ ! -d "data_dispersa" ]; then
+  source env_paralela/bin/activate
+  echo "There is no data_dispersa, running data_dispersa.py"
+  python data_dispersa.py
+  echo "Data_dispersa generation complete"
 else
-  echo "Data already exists."
+  echo "Data_dispersa already exists."
 fi
 
 processes=(1 2 4 8 16 32)
