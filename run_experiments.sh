@@ -15,7 +15,7 @@ for k in "${K_VALUES[@]}"; do
   processes+=($((k * k)))
 done
 
-versions=(1 2)
+versions=(3)
 
 for v in "${versions[@]}"; do
   echo "Compiling version v${v}..."

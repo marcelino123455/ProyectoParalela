@@ -11,8 +11,8 @@ fi
 
 processes=(1 2 4 8 16 32)
 
-echo "Reading N values from ./data..."
-N_VALUES=($(ls data | grep -v '^18$'))
+echo "Reading N values from ./data_dispersa..."
+N_VALUES=($(ls data_dispersa | grep -v '^18$'))
 echo "N_VALUES detected: ${N_VALUES[@]}"
 
 # N_VALUES=("18")
@@ -25,7 +25,7 @@ for n in "${N_VALUES[@]}"; do
   echo "Compiling quicksort_mpi for N=${n} ..."
   g++ -o sortSecuencial sortSecuencial.cpp 
 
-  DATA_FILE="../data/${n}/chars.txt"
+  DATA_FILE="../data_dispersa/${n}/nums.txt"
 
   if [ ! -f "$DATA_FILE" ]; then
     echo "ERROR: File $DATA_FILE does not exist"
