@@ -94,12 +94,9 @@ proyecto/
 ```
 
 
-# TODO
-
-- [ ] v2
-- [ ] speedup, efficiency, etc chart
-- [ ] Quick Sort paralelo copy page and run
-- [ ] count flops
+# FLOP
+Para la medición de FLOP añadimos test_flop el cual nos dió los siguientes resultados: 
+![alt text](image-2.png)
 
 
 # Graficos
