@@ -259,7 +259,7 @@ int main(int argc,char *argv[]){
         MPI_Comm_size(row_comm, &row_size);
         
         //Copiar la fila i esima de 0 a 1 en diagonal
-        if (row_rank == col_rank){
+        if (row_rank == col_rank){ // FLOPS: 0
             for (int j = 0; j<N/raiz_p ; j++){
                 M[1][j] = M[0][j]; 
             }
@@ -278,7 +278,7 @@ int main(int argc,char *argv[]){
         // PASO 3: Sort de las filas 0
         master_msg(rank, "PASO 3: Sort de las filas 0", TESTING);  
         double t3c_start = MPI_Wtime();
-        sort(M[0].begin(), M[0].end());
+        sort(M[0].begin(), M[0].end()); // FLOPS: 0
         double t3c_end = MPI_Wtime();
 
         tiempos_computo[3] = t3c_end - t3c_start;
@@ -307,7 +307,7 @@ int main(int argc,char *argv[]){
         // PASO 5: Reducción
         master_msg(rank, "PASO 5:Reduccion", TESTING); 
         double t5comm_start = MPI_Wtime();
-        MPI_Reduce(M[2].data(), M[3].data(), N/raiz_p, MPI_INT, MPI_SUM, row,row_comm );
+        MPI_Reduce(M[2].data(), M[3].data(), N/raiz_p, MPI_INT, MPI_SUM, row,row_comm ); // FLOPS: N/raiz_p
         double t5comm_end = MPI_Wtime();
         if (TESTING) debug(rank, M, p, "STEP 5: Reduccion");
         tiempos_comunicacion[5] = t5comm_end - t5comm_start;
